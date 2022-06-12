@@ -51,6 +51,15 @@ head(dssData)
 ```
 
 
+
+Checking for number of missing data in each colunm of the dtaset
+
+```{r}
+colSums(is.na(dssData))
+
+```
+
+
 Checking for the structure of the dataset to see the varius data types and confirm correctness
 
 ```{r}
