@@ -1,0 +1,106 @@
+---
+title: "cind802 Project - Descriptive Statistics"
+author: "Austin Okafor"
+date: '2022-06-12'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#####################################################################
+
+
+DESCRIPTIVE STATISTICS:
+
+
+Missing information and unknown values were entered as -99 and -88 respectively. These need to be replaced with NA so as not to distort the analysis outcomes.
+
+
+## Importing the dataset and converting -88 and -99 into NA's since these represnt missing data in the dataset
+
+```{r surveyDataset}
+#-99 and -88 represent missing or unknown values in the dataset. We need to set them to NA when importing the data.
+
+mna <- c(-99, -88)
+
+dssDataset <- read.csv("developmental_services_survey_dataset_0.csv", 
+                       header = TRUE, 
+                       stringsAsFactors = F, 
+                       na.strings = c(mna,"NA"))
+
+head(dssDataset)
+```
+
+
+The first column is just the numbering of the data collected. This is not required and needs to be removed.
+
+```{r dssData}
+#Removing the UID column as it represents numbering
+
+dssData <- dssDataset[ ,-1]
+
+head(dssData)
+
+```
+
+
+Checking for the structure of the dataset to see the varius data types and confirm correctness
+
+```{r}
+str(dssData)
+
+```
+
+
+Running summary command to see mean, median and percentiles.
+
+```{r}
+
+summary(dssData)
+
+```
+
+
+Plot a histogram of Service type rendered
+
+```{r}
+
+hist(dssData$SERVICES, 
+     main = paste("Histogram of", "Type of Services Received "), 
+     xlab = "Service Type", col = "blue")
+
+```
+
+
+
+Creating a Subset of the dataset to be used for additional analysis
+
+```{r}
+
+sub_dssData <- dssData[ ,c("SERVICES", "PR_AGE1", "PR_Q3D", "PR_QQ", "PR_QM1A", "PR_QL1", "PR_QK1", "PR_QF1A","PR_QG1A","PR_QH1A","PR_QI1","PR_QJ1")] 
+
+head(sub_dssData)
+
+
+```
+
+
+
+## Plot of subset of data
+
+Creating a Plot of the subset created to check for any relationships between the variables in the subset
+
+```{r }
+
+plot(sub_dssData)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
