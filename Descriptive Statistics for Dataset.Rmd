@@ -55,14 +55,18 @@ head(dssData)
 Checking for number of missing data in each colunm of the dtaset
 
 ```{r}
+#Checking NA count for each column
+
 colSums(is.na(dssData))
 
 ```
 
 
-Checking for the structure of the dataset to see the varius data types and confirm correctness
+Checking for the structure of the dataset to see the various data types and confirm correctness
 
 ```{r}
+#Checking variables attributes
+
 str(dssData)
 
 ```
@@ -71,6 +75,7 @@ str(dssData)
 Running summary command to see mean, median and percentiles.
 
 ```{r}
+#Checking for mean, median and percentiles of dataset columns
 
 summary(dssData)
 
@@ -80,6 +85,8 @@ summary(dssData)
 Plot a histogram of Service type rendered
 
 ```{r}
+
+#Plot a Histogram of service type received
 
 hist(dssData$SERVICES, 
      main = paste("Histogram of", "Type of Services Received "), 
@@ -92,6 +99,8 @@ hist(dssData$SERVICES,
 Creating a Subset of the dataset to be used for additional analysis
 
 ```{r}
+
+#Create a subset of the dataset
 
 sub_dssData <- dssData[ ,c("SERVICES", "PR_AGE1", "PR_Q3D", "PR_QQ", "PR_QM1A", "PR_QL1", "PR_QK1", "PR_QF1A","PR_QG1A","PR_QH1A","PR_QI1","PR_QJ1")] 
 
@@ -107,6 +116,7 @@ head(sub_dssData)
 Creating a Plot of the subset created to check for any relationships between the variables in the subset
 
 ```{r }
+#Check for any apparent correlation between the subset data
 
 plot(sub_dssData)
 
