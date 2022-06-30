@@ -1,0 +1,417 @@
+---
+title: "EDA"
+author: "Austin Okafor"
+date: '2022-06-28'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+*****************************************************************************
+
+# For his section of the project, we will utilize some R packages for Automated Exploratory Data Analysis. This is especially useful because of the size of the data we are working with, the complexity of the variables, and the number of columns in the dataframe.
+
+
+Let us install tidyverse, DataExplorer, and SmartEDA. 
+These will be used for our EDA work.
+
+```{r Install Packages}
+
+# install.packages("tidyverse")
+library(dplyr)
+library(readr)
+
+# install.packages("DataExplorer")
+library(DataExplorer)
+
+# install.packages("SmartEDA")
+library(SmartEDA)
+
+```
+
+
+Now, leveraging our previous knowledge of the data from the Descriptive Statistics analysis conducted in our last work, we will load the dataset and assign column types automatically. We will however not change any data value.
+
+```{r Load Data an assign column types}
+
+# I chose not to alter the data in any way because most of the column types are factors.I felt that changing the original values may distort the true understanding of how the data is distributed, because certain levels will be lost.
+
+# Also, due to the number of columns, it was very tedious trying to obtain the column types and ensuring no error was made during assignment. I had to redo this steps several times to ensure accuracy.
+
+# read csv file
+dataframe <- 
+  read_delim(
+    file = "developmental_services_survey_dataset_0.csv",
+    col_types = "iffffccfccfffffcfffffffffffffffffffffffffffffcccccnncccccccfcccfccccffcccccf",
+    delim=",")
+
+
+# Reading the first few lines of the dataset
+head(dataframe)
+
+```
+
+
+We will now remove the UID column as this is not useful for any analysis.
+
+```{r remove UID and view structure }
+
+# remove the id
+dataframe <- dataframe[ ,-1]
+
+
+# view data structure and confirm column types and UID column removal
+str(dataframe)
+
+```
+
+
+Now let us learn more about the data distrubution by running summary
+
+```{r}
+
+summary(dataframe)
+
+# We can observe that quite a umber of columns have missing data represented by -88 and -99. This information is useful in performing further analysis as it would better help understand outliers and data distributions in our charts.
+
+```
+
+Now let us move on to more advanced EDA tools.
+We will now create an EDA report using DataExplorer.
+
+```{r}
+
+# Exploratory Data Analysis using DataExplorer
+
+dataframe %>%
+    create_report(
+        report_title = "Developmental Services Survey Dataset",
+        y = "SERVICES", output_dir = getwd()
+    )
+
+# # The HTML otput displays:
+# Basic Statistics
+# Raw Counts
+# Percentages
+# Data Structure
+# Missing Data Profile
+# Univariate Distribution
+# Histogram
+# Bar Chart (with frequency)
+# Bar Chart (by SERVICES)
+# QQ Plot
+# QQ Plot (by SERVICES)
+# Correlation Analysis
+# Principal Component Analysis
+# Bivariate Distribution
+# Boxplot (by SERVICES)
+# Scatterplot (by SERVICES)
+
+# It also shows there are 
+# 33,615 rows, 75 Columns,	73 Discrete columns, and 2 Continuous columns.
+# 
+# The correlation analysis also shows that there are some correlation between variables but due to the number of variables, this is difficult to read.
+# 
+# The principal componenet analysis sections displays feature importance and this is useful for feature selection when creating out samples.
+```
+
+Some additional plots are created in the following chunks to further illustrate the description provided abov.
+
+```{r data structure}
+# view data structure using DataExplorer
+
+plot_str(dataframe)
+
+```
+
+
+
+```{r Bar Charts}
+# view bar charts using DataExplorer
+
+plot_bar(dataframe)
+
+```
+
+
+
+```{r more Bar Charts}
+
+# view bar charts with Services using DataExplorer
+
+plot_bar(dataframe, by="SERVICES")
+
+```
+
+
+```{r Numerical Variables QQPlot}
+
+plot_qq(dataframe)
+
+```
+ 
+
+
+```{r Density}
+
+plot_density(dataframe)
+
+```
+
+
+
+```{r correlation}
+
+plot_correlation(dataframe)
+
+```
+
+
+
+```{r Feature Analysis}
+
+plot_prcomp(dataframe)
+
+```
+
+
+Now let us run a similiar EDA process but this time, using SmartEDA
+
+```{r SmartEDA}
+# This shows the distribution of our dependent variable, services
+
+library(SmartEDA)
+
+
+ExpReport(
+  dataframe,
+  Target="SERVICES",
+  label= "Developmental Services Survey Dataset",
+  op_file="SmartEDA.html",
+  Rc = "3")
+
+```
+
+We now view an overview of the dataset using SmartEDA
+
+```{r Summary description}
+
+# Overview of the dataset
+
+ExpData(data=dataframe, type=1)
+
+```
+
+Then the data structure 
+
+
+```{r}
+# Description of the data structure
+
+ExpData(data=dataframe, type=2)
+
+```
+
+Now to view the variable importance based on information value. This is particularly importnt for feature selection.
+
+```{r}
+# variable importance based on information value
+
+try <- ExpCatStat(dataframe, Target="SERVICES", Pclass="1", plot=TRUE)
+
+```
+
+# Decision Tree Classification Algorithm
+
+Referencing the outputs of SmartEDA and DataExplorer for feature selection, I will now create a subset of the data using only the columns of high and medium importance. This will then be used for the modeling stage of our analysis in this project.
+
+
+Creating Subset dataframe using columns with High and Median importance features, and adding labels for variables in services.
+
+```{r Subset for Classification}
+
+# Create a subset of the data and substitute labels for services
+
+subset_Data <- dataframe  %>%
+select (c("SERVICES","PR_QL1","C_QE2_2","C_QRB1_1","C_QRB1_2","C_QS2_3","C_QRB2","C_QS1","C_QS3","C_QRB1_3","C_QS2_1","PR_AGE1","PR_QL1A_1","PR_QL1A_2","PR_QL1A_3","PR_QL1A_4","PR_QM1C","PR_QO1_C_COMBINE","PR_QQ")) %>%
+  mutate(SERVICES = factor(SERVICES, levels = c(1, 2, 3), labels = c('Residential', 'Non-residential', 'Both'))) 
+
+
+head(subset_Data)
+
+str(subset_Data)
+
+```
+
+
+Prepare data for modeling by splitting the dataset into training and test sets.
+
+```{r split into training and test sets}
+# create train set and test set
+
+set.seed(525)
+train_index <- sample(1:nrow(subset_Data), 0.8 * nrow(subset_Data))
+subset_train <- subset_Data[train_index,]
+subset_test <- subset_Data[-train_index,]
+
+# check dimension of train and test set to confirm accuracy of split
+dim(subset_train)
+
+dim(subset_test)
+```
+
+
+
+Since our dependent variable, services, has more than 2 possible outcomes,a Multi-class classification algorithm is required.
+
+
+# Using Classification Model: 
+ 
+We will use rpart.plot for the classification procedure an then proceed to build the model using class
+
+```{r}
+
+# install.packages("rpart.plot")
+
+library(rpart)
+library(rpart.plot)
+fit <- rpart(SERVICES~., data = subset_train, method = 'class')
+rpart.plot(fit, extra = "auto")
+
+```
+
+Let us test the model by making a prediction
+
+```{r prediction}
+
+predict_services <-predict(fit, subset_test, type = 'class')
+
+table_Dss <- table(subset_test$SERVICES, predict_services)
+
+table_Dss
+
+```
+
+
+# Using the Logistics Regression algorithm to predict the Services
+
+Since Linear regression is useful for binary classification, we will need to prepare the data aresh for use regression analysis.
+
+To achieve this, I will create a new column that groups the data into people who use both residential and non-residential services, versus those who only use either. Regression analysis will then be done on this.
+
+We will now load the data and create a subset for classification based on our previous analysis results.
+
+```{r}
+
+new_DF <- read.csv("developmental_services_survey_dataset_0.csv", 
+                       header = TRUE, 
+                       stringsAsFactors = F) 
+                       
+
+
+nw_DF <- new_DF  %>% 
+  select (c("SERVICES","PR_QL1","C_QE2_2","C_QRB1_1","C_QRB1_2","C_QS2_3","C_QRB2","C_QS1","C_QS3","C_QRB1_3","C_QS2_1","PR_AGE1","PR_QL1A_1","PR_QL1A_2","PR_QL1A_3","PR_QL1A_4","PR_QM1C","PR_QO1_C_COMBINE","PR_QQ"))
+
+
+str(nw_DF)
+
+```
+
+Creating a new column called Either_Or_Both to separate patients who used both residential and non-residential services vs thos who only used one of them.
+
+```{r}
+
+# First set the services variables to character
+nw_DF$SERVICES <- as.character(nw_DF$SERVICES)
+
+# Create a new column grouping residential and non-residential as "0"
+newDF <- nw_DF %>%
+  mutate(Either_Or_Both = case_when(
+    endsWith(SERVICES, "1") ~ "0",
+    endsWith(SERVICES, "2") ~ "0",
+    endsWith(SERVICES, "3") ~ "1"
+    ))
+
+str(newDF)
+```
+
+
+
+Remove the SERVICES column as this is no onger needed for our analysis and change PR_QQ to nmeric data
+
+```{r}
+
+# Remove the first column 
+
+newDF <- newDF[ ,-1]
+
+# Changing PR_QQ to numeric data
+newDF$PR_QQ <- as.numeric(gsub(",","",newDF$PR_QQ))
+
+# Changing PR_QQ to numeric data
+newDF$Either_Or_Both <- as.numeric(gsub(",","",newDF$Either_Or_Both))
+
+
+str(newDF)
+
+```
+
+
+
+Prepare data for modeling by splitting the dataset into training and test sets.
+
+```{r Create Test and Train set}
+
+set.seed(535)
+train_newDF <- sample(1:nrow(newDF), 0.8 * nrow(newDF))
+newDF_train <- newDF[train_newDF,]
+newDF_test <- newDF[-train_newDF,]
+
+```
+
+
+Remove the class column, Either_Or_Both, from our training and test datasets
+
+```{r Remove Either_Or_Both column}
+
+train.setDF <- newDF_train[-19]
+test.setDF <- newDF_test[-19]
+
+str(train.setDF)
+str(test.setDF)
+
+```
+
+
+Creating our Logistic Regression model
+
+```{r LR Model}
+
+glm_model <- glm(Either_Or_Both ~.,newDF_train, family = "binomial")
+
+summary(glm_model)
+
+# From the output of the analysis, we notice that not all variables are significant for prediction, C_QRB2, C_QS1, C_QRB1_3, PR_QM1C, and PR_QO1_C_COMBINE are highly significant, while C_QS2_3 and C_QS3 and less significant in that order.
+
+# In the next phase of my analysis, I will be creating another model using only the significant variables. We will also be running the anova function to analyze the table of deviance.
+
+```
+
+
+# Due to time constraints as a result of the amount of work needed to prepare he data for analysis, I will not be able to provide a report on another classification algorithm at this point. This will be investigated in the next phase of this project.
+
+## Thank you.
+
+
+
