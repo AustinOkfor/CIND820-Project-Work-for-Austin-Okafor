@@ -39,7 +39,7 @@ head(dssDataset)
 ```
 
 
-The first column is just the numbering of the data collected. This is not required and needs to be removed.
+The first column (UID) is just the numbering of the data collected. This is not required and needs to be removed.
 
 ```{r dssData}
 #Removing the UID column as it represents numbering
@@ -52,7 +52,33 @@ head(dssData)
 
 
 
-Checking for number of missing data in each colunm of the dtaset
+Checking for the structure of the dataset to see the various data types and confirm correctness
+
+
+```{r}
+#Checking variables attributes
+
+str(dssData)
+
+
+```
+
+# This reveals there are 33615 records in our dataset and that all the categorical variables are stored as integers, and PR_QQ is stored as a character variable.
+# We will need to fix these.
+
+```{r}
+# Changing PR_QQ to numeric data
+
+dssData$PR_QQ <- as.numeric(gsub(",","",dssData$PR_QQ))
+
+
+str(dssData)
+
+```
+
+
+
+Now we check for count of missing data in each column of the dataset. The aim of this process is to determine which columns we may need to drop due to inadequate data.
 
 ```{r}
 #Checking NA count for each column
@@ -62,64 +88,117 @@ colSums(is.na(dssData))
 ```
 
 
-Checking for the structure of the dataset to see the various data types and confirm correctness
+Now we will prun down the data by dropping columns with 10,000 0r more NAs.
 
 ```{r}
-#Checking variables attributes
 
-str(dssData)
+#dropping columns with 10,000 or more NAs
+
+dssData2 <- dssData[ , colSums(is.na(dssData)) < 10000]
+
+
+colSums(is.na(dssData2))
+
+str(dssData2)
+
+#this process leaves us with 37 columns from the initial 75.
 
 ```
 
 
-Running summary command to see mean, median and percentiles.
+Prunning down rows with 5 or more NAs
 
 ```{r}
-#Checking for mean, median and percentiles of dataset columns
+# dropping rows with 5 or more NAs
 
-summary(dssData)
+dssData3 <- dssData2[rowSums(is.na(dssData2)) < 5, ]
+
+str(dssData3)
+
+# this process leaves us with 26732 rows from the initial 33615
 
 ```
 
 
-Plot a histogram of Service type rendered
+Since all the remaining columns represent categorical variables, we will now convert all variables to factors
 
 ```{r}
+# Converting all variables to factors
 
-#Plot a Histogram of service type received
+col_names <- names(dssData3)
+dssData3[,col_names] <- lapply(dssData3[,col_names] , factor)
 
-hist(dssData$SERVICES, 
-     main = paste("Histogram of", "Type of Services Received "), 
-     xlab = "Service Type", col = "blue")
+
+str(dssData3)
 
 ```
 
 
-
-Creating a Subset of the dataset to be used for additional analysis
+Now let us examine a possible relationships between epilepsy, seizures or convulsions cases and acquired brain injuries reported.
 
 ```{r}
 
-#Create a subset of the dataset
+sub_Data1 <- table(dssData3$PR_QN1_G, dssData3$PR_QN1_H) 
 
-sub_dssData <- dssData[ ,c("SERVICES", "PR_AGE1", "PR_Q3D", "PR_QQ", "PR_QM1A", "PR_QL1", "PR_QK1", "PR_QF1A","PR_QG1A","PR_QH1A","PR_QI1","PR_QJ1")] 
 
-head(sub_dssData)
+sub_Data1
 
+# This result suggests that: 
+#373 patients were diagnosed for both Epilepsy, seizures or convulsions and Acquired brain injury.
+
+#70 patients had both Epilepsy, seizures or convulsions and Acquired brain injury but have not been diagnosed yet. This represents a portion of people who may have suffered brain injury as a result of not receiving proper care for their Epilepsy, seizures or convulsion condition. It also represents the number of people who may not have been able to receive required services for their condition.
 
 ```
 
+
+Plot a Bar chart of service type received
+
+```{r}
+# Barplot of service type received
+
+data <- table(dssData3$SERVICES)
+
+data
+
+barplot(data, xlab = "Service Type", ylab = "Frequency", col = c("red","blue","green"), main = paste("Histogram of", "Type of Services Received "), legend.text = c("Residential","Non-residential","Both"), args.legend = list(x = "topleft"))
+
+```
+
+
+Boxplot
+
+```{r}
+# Creating a Boxplot for services and all other service related data
+
+dss <- dssData3[ ,c("SERVICES","PR_Q3D","PR_AGE1","C_QS1","C_BEHAVETHER","C_AUDIOSPEECH","C_COMMCONSUL","C_PT","C_OT","C_DIETICIAN","C_PSYCHIATRIST","C_PSYCHOLOGIST")]
+
+boxplot(dss,
+        main = "Services Rendered With Other Service Types, Age, and Sex", 
+        at = c(1,2,3,4,5,6,7,8,9,10,11,12),
+        names = c("SERVICES","PR_Q3D","PR_AGE1","C_QS1","C_BEHAVETHER","C_AUDIOSPEECH","C_COMMCONSUL","C_PT","C_OT","C_DIETICIAN","C_PSYCHIATRIST","C_PSYCHOLOGIST"), 
+        border = "brown", xlab = "Values", horizontal = TRUE, las = 1.5)
+
+```
 
 
 ## Plot of subset of data
 
-Creating a Plot of the subset created to check for any relationships between the variables in the subset
+Creating a Plot of the subset created to check for any correlation relationships between the variables for services rendered.
 
-```{r }
-#Check for any apparent correlation between the subset data
+Since hese are categorical variables, no relationship is expected.
+
+```{r}
+# Plot of Service types as specified in the data dictionary
+
+sub_dssData <- dssData3[ , c("SERVICES","PR_Q3D","PR_AGE1","C_QS1","C_BEHAVETHER","C_AUDIOSPEECH","C_COMMCONSUL","C_PT","C_OT","C_DIETICIAN","C_PSYCHIATRIST","C_PSYCHOLOGIST")]
+
 
 plot(sub_dssData)
 
+
+# No visible relationship appears to exist between any of the variables.
+
 ```
+
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
